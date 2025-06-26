@@ -1,0 +1,54 @@
+name: Daily Changelog Automation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    types: [closed]
+  schedule:
+    # Run daily at 11:59 PM UTC to capture all daily activity
+    - cron: '59 23 * * *'
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  generate-daily-changelogs:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
+    if: github.event_name == 'push' || (github.event.pull_request.merged == true) || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git remote set-url origin https://x-access-token:${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+
+      - name: Generate Daily Changelogs
+        run: |
+          chmod +x ./scripts/daily-changelog.sh
+          ./scripts/daily-changelog.sh
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if git diff --quiet changelogs/; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit and push changes
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          git add changelogs/
+          git commit -m "docs: auto-generate daily changelogs [skip ci]"
+          git push
