@@ -19,6 +19,8 @@ npm run daily-report
 
 - [📊 Today's Aggregate Report](./daily/2025-06-26.md)
 - 👥 **Individual Reports:**
+  - [Bikram_Luhar](./daily/contributors/2025-06-26-bikram_luhar.md)
+  - [GitHub Action](./daily/contributors/2025-06-26-github_action.md)
   - [Bikram-Bk](./daily/contributors/2025-06-26-bikram_bk.md)
 
 ## Navigation
